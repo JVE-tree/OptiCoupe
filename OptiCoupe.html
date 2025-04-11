@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimiseur de découpe de profilés Norcan</title>
+    <style>
+        :root {
+            --primary: #1a5276;
+            --secondary: #2e86c1;
+            --accent: #3498db;
+            --light: #eef5f9;
+            --dark: #2c3e50;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        h1, h2, h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: var(--secondary);
+        }
+        
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-right: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: var(--light);
+            color: var(--dark);
+            font-weight: 600;
+        }
+        
+        .item-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .visualization {
+            margin-top: 2rem;
+        }
+        
+        .bar {
+            height: 40px;
+            background-color: var(--secondary);
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            position: relative;
+        }
+        
+        .piece {
+            height: 100%;
+            background-color: var(--primary);
+            position: absolute;
+            top: 0;
+            border-right: 2px dashed var(--warning);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            overflow: hidden;
+        }
+        
+        .cut {
+            position: absolute;
+            height: 100%;
+            width: 3px;
+            background-color: var(--danger);
+            top: 0;
+        }
+        
+        .waste {
+            height: 100%;
+            background-color: var(--light);
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dark);
+            font-size: 0.8rem;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+        
+        .badge-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .badge-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .badge-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .summary {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: var(--light);
+            border-radius: 4px;
+        }
+        
+        .result-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .settings-row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .settings-row > div {
+            flex: 1;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .legend-color {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.5rem;
+            border-radius: 2px;
+        }
+        
+        .print-btn {
+            background-color: var(--dark);
+            margin-top: 1rem;
+        }
+        
+        @media print {
+            header, .inputs-container {
+                display: none;
+            }
+            
+            .visualization-container {
+                page-break-inside: avoid;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .settings-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Optimiseur de découpe de profilés Norcan</h1>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="card inputs-container">
+                <h2>Configuration des barres</h2>
+                <div class="settings-row">
+                    <div>
+                        <label for="bar-length">Longueur standard des barres (mm)</label>
+                        <input type="number" id="bar-length" value="6000" min="1000">
+                    </div>
+                    <div>
+                        <label for="cut-width">Largeur de coupe de la scie (mm)</label>
+                        <input type="number" id="cut-width" value="3" min="0.1" step="0.1">
+                    </div>
+                </div>
+                
+                <h3>Profilés disponibles</h3>
+                <div class="item-list" id="bar-list">
+                    <table id="bars-table">
+                        <thead>
+                            <tr>
+                                <th>Longueur (mm)</th>
+                                <th>Quantité</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>6000</td>
+                                <td>10</td>
+                                <td>
+                                    <button class="btn-sm btn-danger action-btn" onclick="removeBar(0)">Supprimer</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="settings-row">
+                    <div>
+                        <label for="new-bar-length">Longueur (mm)</label>
+                        <input type="number" id="new-bar-length" value="6000" min="100">
+                    </div>
+                    <div>
+                        <label for="new-bar-qty">Quantité</label>
+                        <input type="number" id="new-bar-qty" value="1" min="1">
+                    </div>
+                </div>
+                <button class="btn-success" onclick="addBar()">Ajouter une barre</button>
+                
+                <h2 style="margin-top: 2rem;">Pièces à découper</h2>
+                <div class="item-list" id="piece-list">
+                    <table id="pieces-table">
+                        <thead>
+                            <tr>
+                                <th>Longueur (mm)</th>
+                                <th>Quantité</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Exemple de pièces -->
+                            <tr>
+                                <td>1200</td>
+                                <td>8</td>
+                                <td>
+                                    <button class="btn-sm btn-danger action-btn" onclick="removePiece(0)">Supprimer</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>800</td>
+                                <td>12</td>
+                                <td>
+                                    <button class="btn-sm btn-danger action-btn" onclick="removePiece(1)">Supprimer</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>500</td>
+                                <td>5</td>
+                                <td>
+                                    <button class="btn-sm btn-danger action-btn" onclick="removePiece(2)">Supprimer</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="settings-row">
+                    <div>
+                        <label for="new-piece-length">Longueur (mm)</label>
+                        <input type="number" id="new-piece-length" value="1000" min="10">
+                    </div>
+                    <div>
+                        <label for="new-piece-qty">Quantité</label>
+                        <input type="number" id="new-piece-qty" value="1" min="1">
+                    </div>
+                </div>
+                <button class="btn-success" onclick="addPiece()">Ajouter une pièce</button>
+                
+                <button style="margin-top: 2rem;" onclick="calculateCuttingPlan()">Calculer le plan de découpe</button>
+            </div>
+            
+            <div class="card visualization-container">
+                <div class="result-title">
+                    <h2>Plan de découpe optimisé</h2>
+                    <button class="btn-sm print-btn" onclick="window.print()">Imprimer le plan</button>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--primary);"></div>
+                        <span>Pièce</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--danger);"></div>
+                        <span>Coupe</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: var(--light);"></div>
+                        <span>Chute</span>
+                    </div>
+                </div>
+                
+                <div class="summary" id="summary">
+                    <strong>Résumé:</strong> Utilisez cette application pour optimiser vos découpes de profilés Norcan. Renseignez les dimensions des barres disponibles et les pièces à découper pour obtenir un plan de découpe optimal.
+                </div>
+                
+                <div class="visualization" id="visualization">
+                    <!-- Le plan de découpe sera généré ici -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // États pour stocker les données
+        let bars = [
+            { length: 6000, quantity: 10 }
+        ];
+        
+        let pieces = [
+            { length: 1200, quantity: 8 },
+            { length: 800, quantity: 12 },
+            { length: 500, quantity: 5 }
+        ];
+        
+        // Fonctions pour ajouter/supprimer des barres et des pièces
+        function addBar() {
+            const length = parseInt(document.getElementById('new-bar-length').value);
+            const quantity = parseInt(document.getElementById('new-bar-qty').value);
+            
+            if (length > 0 && quantity > 0) {
+                bars.push({ length, quantity });
+                updateBarsTable();
+            }
+        }
+        
+        function removeBar(index) {
+            bars.splice(index, 1);
+            updateBarsTable();
+        }
+        
+        function addPiece() {
+            const length = parseInt(document.getElementById('new-piece-length').value);
+            const quantity = parseInt(document.getElementById('new-piece-qty').value);
+            
+            if (length > 0 && quantity > 0) {
+                pieces.push({ length, quantity });
+                updatePiecesTable();
+            }
+        }
+        
+        function removePiece(index) {
+            pieces.splice(index, 1);
+            updatePiecesTable();
+        }
+        
+        function updateBarsTable() {
+            const tbody = document.querySelector('#bars-table tbody');
+            tbody.innerHTML = '';
+            
+            bars.forEach((bar, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${bar.length}</td>
+                    <td>${bar.quantity}</td>
+                    <td>
+                        <button class="btn-sm btn-danger action-btn" onclick="removeBar(${index})">Supprimer</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function updatePiecesTable() {
+            const tbody = document.querySelector('#pieces-table tbody');
+            tbody.innerHTML = '';
+            
+            pieces.forEach((piece, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${piece.length}</td>
+                    <td>${piece.quantity}</td>
+                    <td>
+                        <button class="btn-sm btn-danger action-btn" onclick="removePiece(${index})">Supprimer</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Fonction pour calculer le plan de découpe optimisé
+        function calculateCuttingPlan() {
+            const cutWidth = parseFloat(document.getElementById('cut-width').value) || 3;
+            
+            // Préparer toutes les pièces individuelles
+            let allPiecesToCut = [];
+            pieces.forEach(piece => {
+                for (let i = 0; i < piece.quantity; i++) {
+                    allPiecesToCut.push(piece.length);
+                }
+            });
+            
+            // Trier les pièces par ordre décroissant pour optimiser l'utilisation
+            allPiecesToCut.sort((a, b) => b - a);
+            
+            // Préparer toutes les barres disponibles
+            let allBars = [];
+            bars.forEach(bar => {
+                for (let i = 0; i < bar.quantity; i++) {
+                    allBars.push({ 
+                        originalLength: bar.length, 
+                        remainingLength: bar.length, 
+                        pieces: [] 
+                    });
+                }
+            });
+            
+            // Trier les barres par ordre croissant pour utiliser les plus petites en premier
+            allBars.sort((a, b) => a.originalLength - b.originalLength);
+            
+            // Premier passage: essayer de placer les pièces les plus grandes
+            let unplacedPieces = [];
+            
+            for (let i = 0; i < allPiecesToCut.length; i++) {
+                const pieceLength = allPiecesToCut[i];
+                let placed = false;
+                
+                // Parcourir les barres pour trouver où placer la pièce
+                for (let j = 0; j < allBars.length; j++) {
+                    if (allBars[j].remainingLength >= pieceLength) {
+                        // La pièce tient dans la barre
+                        allBars[j].pieces.push({
+                            length: pieceLength,
+                            startPos: allBars[j].originalLength - allBars[j].remainingLength
+                        });
+                        
+                        // Mettre à jour la longueur restante en tenant compte de la largeur de coupe
+                        allBars[j].remainingLength -= (pieceLength + cutWidth);
+                        
+                        placed = true;
+                        break;
+                    }
+                }
+                
+                if (!placed) {
+                    unplacedPieces.push(pieceLength);
+                }
+            }
+            
+            // Second passage: essayer de placer les pièces restantes dans les espaces restants
+            if (unplacedPieces.length > 0) {
+                // Trier les pièces non placées par ordre décroissant
+                unplacedPieces.sort((a, b) => a - b);
+                
+                for (let i = 0; i < unplacedPieces.length; i++) {
+                    const pieceLength = unplacedPieces[i];
+                    let placed = false;
+                    
+                    // Parcourir les barres pour trouver où placer la pièce
+                    for (let j = 0; j < allBars.length; j++) {
+                        if (allBars[j].remainingLength >= pieceLength) {
+                            // La pièce tient dans la barre
+                            allBars[j].pieces.push({
+                                length: pieceLength,
+                                startPos: allBars[j].originalLength - allBars[j].remainingLength
+                            });
+                            
+                            // Mettre à jour la longueur restante
+                            allBars[j].remainingLength -= (pieceLength + cutWidth);
+                            
+                            placed = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!placed) {
+                        // On ne peut pas placer cette pièce dans les barres disponibles
+                        // Dans une application réelle, on pourrait suggérer d'ajouter plus de barres
+                        console.log(`Impossible de placer la pièce de ${pieceLength}mm`);
+                    }
+                }
+            }
+            
+            // Filtrer les barres qui ont été utilisées
+            const usedBars = allBars.filter(bar => bar.pieces.length > 0);
+            
+            // Calculer les statistiques
+            let totalBarsLength = 0;
+            let totalUsedLength = 0;
+            let totalWaste = 0;
+            
+            usedBars.forEach(bar => {
+                totalBarsLength += bar.originalLength;
+                let usedLength = 0;
+                
+                bar.pieces.forEach(piece => {
+                    usedLength += piece.length;
+                });
+                
+                // Ajouter la largeur de coupe pour chaque pièce sauf la dernière
+                usedLength += cutWidth * (bar.pieces.length - 1);
+                
+                totalUsedLength += usedLength;
+                totalWaste += bar.remainingLength;
+            });
+            
+            const wastePercentage = (totalWaste / totalBarsLength * 100).toFixed(2);
+            
+            // Mettre à jour le résumé
+            const summaryElement = document.getElementById('summary');
+            summaryElement.innerHTML = `
+                <strong>Résumé:</strong>
+                <ul>
+                    <li>Barres utilisées: ${usedBars.length} sur ${allBars.length}</li>
+                    <li>Longueur totale des barres: ${totalBarsLength} mm</li>
+                    <li>Longueur totale utilisée: ${totalUsedLength} mm</li>
+                    <li>Chutes totales: ${totalWaste} mm (${wastePercentage}%)</li>
+                </ul>
+            `;
+            
+            // Générer la visualisation
+            const visualizationElement = document.getElementById('visualization');
+            visualizationElement.innerHTML = '';
+            
+            usedBars.forEach((bar, barIndex) => {
+                const barElement = document.createElement('div');
+                barElement.className = 'bar';
+                barElement.style.width = '100%';
+                
+                // Échelle pour convertir mm en pixels
+                const scale = 100 / bar.originalLength;
+                
+                // Ajouter chaque pièce à la barre
+                bar.pieces.forEach((piece, pieceIndex) => {
+                    const pieceElement = document.createElement('div');
+                    pieceElement.className = 'piece';
+                    pieceElement.style.left = `${piece.startPos * scale}%`;
+                    pieceElement.style.width = `${piece.length * scale}%`;
+                    
+                    // Ajouter l'étiquette avec la longueur
+                    if (piece.length * scale > 5) { // Ne montrer l'étiquette que si la pièce est assez grande
+                        pieceElement.textContent = `${piece.length}mm`;
+                    }
+                    
+                    barElement.appendChild(pieceElement);
+                    
+                    // Ajouter une coupe après chaque pièce (sauf la dernière)
+                    if (pieceIndex < bar.pieces.length - 1) {
+                        const cutElement = document.createElement('div');
+                        cutElement.className = 'cut';
+                        const cutPosition = piece.startPos + piece.length;
+                        cutElement.style.left = `${cutPosition * scale}%`;
+                        barElement.appendChild(cutElement);
+                    }
+                });
+                
+                // Ajouter la chute à la fin de la barre
+                if (bar.remainingLength > 0) {
+                    const wasteElement = document.createElement('div');
+                    wasteElement.className = 'waste';
+                    wasteElement.style.width = `${bar.remainingLength * scale}%`;
+                    const wastePosition = bar.originalLength - bar.remainingLength;
+                    wasteElement.style.left = `${wastePosition * scale}%`;
+                    
+                    // Ajouter l'étiquette avec la longueur de la chute
+                    if (bar.remainingLength * scale > 3) { // Ne montrer l'étiquette que si la chute est assez grande
+                        wasteElement.textContent = `${bar.remainingLength}mm`;
+                    }
+                    
+                    barElement.appendChild(wasteElement);
+                }
+                
+                // Ajouter une étiquette pour la barre
+                const barLabel = document.createElement('div');
+                barLabel.style.marginBottom = '0.5rem';
+                barLabel.innerHTML = `<strong>Barre ${barIndex + 1}:</strong> ${bar.originalLength}mm`;
+                
+                // Ajouter l'efficacité
+                const usedLength = bar.originalLength - bar.remainingLength;
+                const efficiency = ((usedLength / bar.originalLength) * 100).toFixed(2);
+                
+                let badgeClass = 'badge-success';
+                if (efficiency < 80) {
+                    badgeClass = 'badge-warning';
+                }
+                if (efficiency < 60) {
+                    badgeClass = 'badge-danger';
+                }
+                
+                barLabel.innerHTML += `<span class="badge ${badgeClass}">Utilisation: ${efficiency}%</span>`;
+                
+                visualizationElement.appendChild(barLabel);
+                visualizationElement.appendChild(barElement);
+            });
+            
+            // Afficher un message si certaines pièces n'ont pas pu être placées
+            const unplacedCount = unplacedPieces.filter(p => !usedBars.some(bar => bar.pieces.some(bp => bp.length === p))).length;
+            if (unplacedCount > 0) {
+                const warningElement = document.createElement('div');
+                warningElement.style.marginTop = '1rem';
+                warningElement.style.color = 'var(--danger)';
+                warningElement.innerHTML = `<strong>Attention:</strong> ${unplacedCount} pièce(s) n'ont pas pu être placées. Veuillez ajouter plus de barres.`;
+                visualizationElement.appendChild(warningElement);
+            }
+        }
+        
+        // Initialiser les tableaux
+        updateBarsTable();
+        updatePiecesTable();
+        
+        // Calculer le plan initial
+        calculateCuttingPlan();
+    </script>
+</body>
+</html>
